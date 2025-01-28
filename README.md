@@ -12,18 +12,18 @@ This project leverages the Raspberry Pi Camera Module to detect motion using Ope
 
 ## Requirements
 
-- Raspberry Pi with Pi Camera Module.
+- Raspberry Pi with Pi Camera Module. Tested with Camera Module v2. See https://www.raspberrypi.com/documentation/accessories/camera.html
 - Raspberry Pi Bookworm OS installed.
+
 Install picamera2
 '''bash
 sudo apt install python3-picamera2 --no-install-recommends
 '''
-Use virtual enn.
+
+Use virtual environment.
 python -m venv --system-site-packages venv
-Install opencv, python-telegram-bot
-```bash
+source venv/bin/activate
 pip install -r requirements.txt
-```
 
 ## Configuration
 
@@ -90,7 +90,10 @@ To disable motion detection, use the `/stop_motion_detect` command.
 ```
 
 ### 6. Reboot the Raspberry Pi
-Create a service to run python script upon boot up
+Create a pi_cam.service in /etc/systemd/system/ to run python script upon boot up
+sudo systemctl enable pi_cam.service
+sudo systemctl start pi_cam.service
+
 
 To reboot the Raspberry Pi remotely, use the `/reboot` command.
 ```
