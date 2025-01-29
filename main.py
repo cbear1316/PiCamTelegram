@@ -26,10 +26,10 @@ def restricted(func):
         return func(update, context, *args, **kwargs)
     return wrapped
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# logging.basicConfig(
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     level=logging.INFO
+# )
 
 # Global flag to control thread execution
 picam2 = None
@@ -66,6 +66,7 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         run_thread = None
     if picam2:
         picam2.stop()
+        picam2.close()
         picam2 = None
     text = "Pi camera stopped."
     await context.bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.HTML)
@@ -118,9 +119,9 @@ async def picam_process(context, chat_id):
     counter = 0
     while start_flag.is_set():
         try:
-            counter = (counter + 1) % 18000
-            if counter == 0:
-                picam2.set_controls({"AeEnable": True, "AeMeterMode": "center"})
+            # counter = (counter + 1) % 18000
+            # if counter == 0:
+            #     picam2.set_controls({"AeEnable": True, "AeMeterMode": "center"})
             frame = picam2.capture_array()
             frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             frame_small = cv2.resize(frame_bgr, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_AREA)
@@ -137,11 +138,10 @@ async def picam_process(context, chat_id):
                 motion_detected = False
                 for contour in contours:
                     if cv2.contourArea(contour) > min_contour_area:
-                        await context.bot.send_message(chat_id=chat_id, text=f"contour: {cv2.contourArea(contour)}")
+                        # await context.bot.send_message(chat_id=chat_id, text=f"contour: {cv2.contourArea(contour)}")
                         cv2.imwrite("frame.jpg", frame_bgr)
                         motion_detected = True
                         start_recording = True
-                        expected_video_frames = 0
                 current_time = time.time()
                 
                 if send_enable:
@@ -160,17 +160,23 @@ async def picam_process(context, chat_id):
                     if motion_detected:
                         no_motion_counter = 0
                     else:
-                        if no_motion_counter < 50:
+                        if no_motion_counter < 30:
                             no_motion_counter += 1
                         else:
                             start_recording = False
-                            if expected_video_frames > 100: # ~ 10sec
-                                await context.bot.send_message(chat_id=chat_id, text='Processing video to send')
+                            if expected_video_frames > 50: # ~ 5sec
+                                # await context.bot.send_message(chat_id=chat_id, text='Processing video to send')
                                 video_writer.release()
                                 await context.bot.send_video(chat_id=chat_id,video=output_video)
-                                video_writer = cv2.VideoWriter(output_video, fourcc, 10, (410, 308))            
+                                video_writer = cv2.VideoWriter(output_video, fourcc, 10, (410, 308))
+                            else:
+                                video_writer.release()
+                                video_writer = cv2.VideoWriter(output_video, fourcc, 10, (410, 308))
+                else:
+                    expected_video_frames = 0
+
         except Exception as e:
-            print(f"Error: {e}")
+            await context.bot.send_message(chat_id=chat_id, text=str(e))
             
         await asyncio.sleep(0.1)  # Asynchronous sleep, allowing other tasks to run
 
