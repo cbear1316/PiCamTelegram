@@ -52,9 +52,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not start_flag.is_set():
         start_flag.set()  # Reset the exit flag
         run_thread = asyncio.create_task(picam_process(context, update.message.chat_id))
-        text = "Operation Started."
+        text = "Pi camera started"
     else:
-        text = "Operation Already Started."
+        text = "Pi camera already started."
     await context.bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.HTML)
 
 @restricted    
@@ -67,7 +67,7 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if picam2:
         picam2.stop()
         picam2 = None
-    text = "Pi Camera stopped."
+    text = "Pi camera stopped."
     await context.bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.HTML)
 
 @restricted
@@ -80,9 +80,9 @@ async def reboot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @restricted
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not run_thread:
-        status = "<b>Pi Camera not yet started</b>"
+        status = "<b>Pi camera not yet started</b>"
     else:
-        status = "<b>Pi Camera Started</b>"
+        status = "<b>Pi camera Started</b>"
     
     text = """
     <b>Pi Camera Commands</b> 
@@ -137,6 +137,7 @@ async def picam_process(context, chat_id):
                 motion_detected = False
                 for contour in contours:
                     if cv2.contourArea(contour) > min_contour_area:
+                        await context.bot.send_message(chat_id=chat_id, text=f"contour: {cv2.contourArea(contour)}")
                         cv2.imwrite("frame.jpg", frame_bgr)
                         motion_detected = True
                         start_recording = True
@@ -163,7 +164,7 @@ async def picam_process(context, chat_id):
                             no_motion_counter += 1
                         else:
                             start_recording = False
-                            if expected_video_frames > 50:
+                            if expected_video_frames > 100: # ~ 10sec
                                 await context.bot.send_message(chat_id=chat_id, text='Processing video to send')
                                 video_writer.release()
                                 await context.bot.send_video(chat_id=chat_id,video=output_video)
