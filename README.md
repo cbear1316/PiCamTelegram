@@ -3,6 +3,7 @@
 This project leverages the Raspberry Pi Camera Module to detect motion using OpenCV and sends captured images or video clips to a Telegram bot when motion is detected. The bot also allows you to control the camera, take snapshots, start and stop motion detection, and reboot the Raspberry Pi.
 
 ## Features
+https://www.hackster.io/karthik058/using-android-phone-as-raspberry-pi-s-display-7b7fd3
 
 - **Motion Detection**: Detect motion in the camera feed and send a snapshot and video clip (if motion persists ~5s or more) to a Telegram chat.
 - **Snapshot Mode**: Take a snapshot when requested via a command and send it to Telegram.
